@@ -1,3 +1,4 @@
+const builtin = @import("builtin");
 const std = @import("std");
 
 fn usage() !void {
@@ -75,15 +76,22 @@ pub fn main() !u8 {
 const Success = enum { success, failure };
 
 fn open(dir: std.fs.Dir, path: []const u8) !std.fs.File {
-    const path_w = try std.os.windows.sliceToPrefixedFileW(path);
+    if (builtin.os.tag == .windows) {
+        const path_w = try std.os.windows.sliceToPrefixedFileW(path);
+        return std.fs.File{
+            .handle = try std.os.windows.OpenFile(path_w.span(), .{
+                .dir = dir.fd,
+                .access_mask = std.os.windows.SYNCHRONIZE | std.os.windows.GENERIC_READ,
+                .creation = std.os.windows.FILE_OPEN,
+                .io_mode = .blocking,
+                .filter = .any,
+            }),
+            .capable_io_mode = std.io.default_mode,
+            .intended_io_mode = .blocking,
+        };
+    }
     return std.fs.File{
-        .handle = try std.os.windows.OpenFile(path_w.span(), .{
-            .dir = dir.fd,
-            .access_mask = std.os.windows.SYNCHRONIZE | std.os.windows.GENERIC_READ,
-            .creation = std.os.windows.FILE_OPEN,
-            .io_mode = .blocking,
-            .filter = .any,
-        }),
+        .handle = try std.os.openat(dir.fd, path, std.os.O.RDONLY, 0),
         .capable_io_mode = std.io.default_mode,
         .intended_io_mode = .blocking,
     };
@@ -162,7 +170,7 @@ fn listFileLong(
             " {s} {} {:0>2}:{:0>2}:{:0>2}",
             .{
                 @tagName(md.month),
-                @intCast(u6, md.day_index) + 1,
+                @as(u6, md.day_index) + 1,
                 hours,
                 min,
                 secs,
