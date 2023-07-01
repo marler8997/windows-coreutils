@@ -59,7 +59,7 @@ pub fn main() !u8 {
 
     const elapsed = (try std.time.Instant.now()).since(start);
     const stderr = std.io.getStdErr().writer();
-    try stderr.print("timer: {}", .{std.fmt.fmtDuration(elapsed)});
+    try stderr.print("timer: {}\n", .{std.fmt.fmtDuration(elapsed)});
 
     return 0;
 }
