@@ -28,6 +28,7 @@ pub fn main() !u8 {
     }
 
     var recurse = false;
+    var force = false;
     const args = blk: {
         var new_args = all_args[1..];
         var new_arg_count: usize = 0;
@@ -35,11 +36,17 @@ pub fn main() !u8 {
             if (!std.mem.startsWith(u8, arg, "-")) {
                 new_args[new_arg_count] = arg;
                 new_arg_count += 1;
-            } else if (std.mem.eql(u8, arg, "-r")) {
-                recurse = true;
             } else {
-                std.log.err("unknown cmdline options '{s}'", .{arg});
-                return 0x7f;
+                for (arg[1..]) |c| {
+                    if (c == 'r') {
+                        recurse = true;
+                    } else if (c == 'f') {
+                        force = true;
+                    } else {
+                        std.log.err("unknown cmdline option '-{c}'", .{c});
+                        return 0x7f;
+                    }
+                }
             }
         }
         break :blk new_args[0..new_arg_count];
@@ -49,21 +56,37 @@ pub fn main() !u8 {
         return 0x7f;
     }
 
-    var exit_code: u8 = 0;
+    const stderr = std.io.getStdErr().writer();
+    var got_error = false;
     for (args) |arg| {
         if (recurse) {
+            if (!force) {
+                std.fs.cwd().access(arg, .{}) catch |err| switch (err) {
+                    error.FileNotFound => {
+                        try stderr.print("rm: '{s}' does not exist", .{arg});
+                        got_error = true;
+                        continue;
+                    },
+                    else => |e| return e,
+                };
+            }
             try std.fs.cwd().deleteTree(arg);
         } else {
             std.fs.cwd().deleteFile(arg) catch |err| switch (err) {
+                error.FileNotFound => {
+                    if (!force) {
+                        try stderr.print("rm: '{s}' does not exist", .{arg});
+                        got_error = true;
+                    }
+                },
                 error.IsDir => {
-                    const stderr = std.io.getStdErr().writer();
                     try stderr.print("rm: '{s}' is a directory\n", .{arg});
-                    exit_code = 0x7f;
+                    got_error = true;
                 },
                 else => |e| return e,
             };
         }
     }
 
-    return exit_code;
+    return if (got_error) 0x7f else 0;
 }
