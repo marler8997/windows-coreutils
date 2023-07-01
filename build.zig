@@ -4,7 +4,9 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const tools: []const []const u8 = &.{ "touch", "rm" };
+    // NOTE: timer is supposed to be "time" but can't use that on windows
+    //       because time is a builtin cmd-prompt function.
+    const tools: []const []const u8 = &.{ "touch", "rm", "timer" };
     inline for (tools) |tool| {
         const exe = b.addExecutable(.{
             .name = tool,
