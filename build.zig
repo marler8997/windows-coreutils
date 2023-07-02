@@ -1,3 +1,4 @@
+// tested with zig version 0.11.0-dev.3312+ab37ab33c
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
