@@ -159,7 +159,7 @@ fn listFileLong(
     }
     {
         const es = std.time.epoch.EpochSeconds{
-            .secs = @intCast(u64, @divTrunc(stat.mtime, std.time.ns_per_s)),
+            .secs = @intCast(@divTrunc(stat.mtime, std.time.ns_per_s)),
         };
         const md = es.getEpochDay().calculateYearDay().calculateMonthDay();
         const ds = es.getDaySeconds();
