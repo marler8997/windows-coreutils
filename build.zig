@@ -1,4 +1,4 @@
-// tested with zig version 0.11.0-dev.3886+0c1bfe271
+// tested with zig version 0.11.0
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
@@ -15,7 +15,9 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         });
-        exe.override_dest_dir = .prefix;
-        b.installArtifact(exe);
+        const install = b.addInstallArtifact(exe, .{
+            .dest_dir = .{ .override = .prefix },
+        });
+        b.getInstallStep().dependOn(&install.step);
     }
 }
