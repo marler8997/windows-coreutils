@@ -1,5 +1,6 @@
 const builtin = @import("builtin");
 const std = @import("std");
+const fs = @import("fs.zig");
 
 fn usage() !void {
     const stderr = std.io.getStdErr().writer();
@@ -75,35 +76,13 @@ pub fn main() !u8 {
 
 const Success = enum { success, failure };
 
-fn open(dir: std.fs.Dir, path: []const u8) !std.fs.File {
-    if (builtin.os.tag == .windows) {
-        const path_w = try std.os.windows.sliceToPrefixedFileW(path);
-        return std.fs.File{
-            .handle = try std.os.windows.OpenFile(path_w.span(), .{
-                .dir = dir.fd,
-                .access_mask = std.os.windows.SYNCHRONIZE | std.os.windows.GENERIC_READ,
-                .creation = std.os.windows.FILE_OPEN,
-                .io_mode = .blocking,
-                .filter = .any,
-            }),
-            .capable_io_mode = std.io.default_mode,
-            .intended_io_mode = .blocking,
-        };
-    }
-    return std.fs.File{
-        .handle = try std.os.openat(dir.fd, path, std.os.O.RDONLY, 0),
-        .capable_io_mode = std.io.default_mode,
-        .intended_io_mode = .blocking,
-    };
-}
-
 pub fn list(
     writer: BufferedWriter.Writer,
     path: []const u8,
     opt: Options,
 ) !Success {
     const stderr = std.io.getStdErr().writer();
-    const file = open(std.fs.cwd(), path) catch |err| switch (err) {
+    const file = fs.open(std.fs.cwd(), path, .{}) catch |err| switch (err) {
         error.FileNotFound => {
             try stderr.print("ls: '{s}' does not exist", .{path});
             return .failure;
@@ -188,7 +167,7 @@ fn listDir(
     var it = dir.iterate();
     while (try it.next()) |entry| {
         if (opt.long) {
-            var sub_file = try open(dir.dir, entry.name);
+            var sub_file = try fs.open(dir.dir, entry.name, .{});
             defer sub_file.close();
             try listFileLong(opt, writer, sub_file, entry.name);
         } else {
