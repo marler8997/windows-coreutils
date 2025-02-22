@@ -2,5 +2,11 @@
     .name = "windows-coreutils",
     .version = "0.0.0",
     .minimum_zig_version = "0.13.0",
+    .dependencies = .{
+        .win32 = .{
+            .url = "git+https://github.com/marlersoft/zigwin32#e8739b32a33ce48a3286aba31918b26a9dfc6ef0",
+            .hash = "1220219ca4acfa5804ca39945f92554e93507b077c03605b7a4c1c0401f0c7121339",
+        },
+    },
     .paths = .{"."},
 }
