@@ -4,11 +4,9 @@ const fs = @import("fs.zig");
 
 fn usage() !void {
     const stderr = std.io.getStdErr().writer();
-    try stderr.writeAll(
-        "Usage: ls [-lh] [FILE]...\n" ++
+    try stderr.writeAll("Usage: ls [-lh] [FILE]...\n" ++
         "    -l Long listing format\n" ++
-        "    -h Human readable sizes\n"
-    );
+        "    -h Human readable sizes\n");
 }
 
 const Options = struct {
@@ -24,7 +22,7 @@ pub fn main() !u8 {
     const all_args = try std.process.argsAlloc(allocator);
     // no need to free
 
-    var opt = Options{ };
+    var opt = Options{};
     const args: []const [:0]const u8 = blk: {
         const start: usize = if (all_args.len == 0) 0 else 1;
         for (all_args[start..], start..) |arg, arg_index| {
@@ -46,7 +44,7 @@ pub fn main() !u8 {
                 }
             }
         }
-        break :blk &[_][:0]u8 { };
+        break :blk &[_][:0]u8{};
     };
 
     const stdout = std.io.getStdOut().writer();
@@ -102,7 +100,7 @@ pub fn list(
             return .success;
         },
         .directory => {
-            var dir = std.fs.IterableDir{ .dir = .{ .fd = file.handle } };
+            const dir = std.fs.Dir{ .fd = file.handle };
             // don't close the directory, it's still owned by file
             //defer dir.close();
             return try listDir(writer, dir, opt);
@@ -161,13 +159,13 @@ fn listFileLong(
 
 fn listDir(
     writer: BufferedWriter.Writer,
-    dir: std.fs.IterableDir,
+    dir: std.fs.Dir,
     opt: Options,
 ) !Success {
     var it = dir.iterate();
     while (try it.next()) |entry| {
         if (opt.long) {
-            var sub_file = try fs.open(dir.dir, entry.name, .{});
+            var sub_file = try fs.open(dir, entry.name, .{});
             defer sub_file.close();
             try listFileLong(opt, writer, sub_file, entry.name);
         } else {

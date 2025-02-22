@@ -14,7 +14,7 @@ pub fn main() !u8 {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const allocator = arena.allocator();
-    
+
     const all_args = try std.process.argsAlloc(allocator);
     // no need to free
 
@@ -38,7 +38,7 @@ pub fn main() !u8 {
     const start = try std.time.Instant.now();
 
     blk: {
-        var proc = std.ChildProcess.init(args, allocator);
+        var proc = std.process.Child.init(args, allocator);
         proc.spawn() catch |err| {
             std.log.err("failed to spawn child process with {s}", .{@errorName(err)});
             break :blk;

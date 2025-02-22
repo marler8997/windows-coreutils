@@ -10,7 +10,7 @@ pub fn build(b: *std.Build) void {
     inline for (tools) |tool| {
         const exe = b.addExecutable(.{
             .name = tool,
-            .root_source_file = .{ .path = tool ++ ".zig" },
+            .root_source_file = b.path(tool ++ ".zig"),
             .target = target,
             .optimize = optimize,
         });
