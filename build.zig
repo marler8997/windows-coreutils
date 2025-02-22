@@ -14,9 +14,6 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         });
-        const install = b.addInstallArtifact(exe, .{
-            .dest_dir = .{ .override = .prefix },
-        });
-        b.getInstallStep().dependOn(&install.step);
+        b.installArtifact(exe);
     }
 }
