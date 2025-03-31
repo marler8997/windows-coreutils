@@ -130,7 +130,7 @@ fn listFileLong(
     const stat = try file.stat();
     try writer.print("{c} ", .{getEntryChar(stat.kind)});
     if (opt.human) {
-        try writer.print("{: >9.1}", .{std.fmt.fmtIntSizeBin(stat.size)});
+        try writer.print("{: >9.3}", .{std.fmt.fmtIntSizeBin(stat.size)});
     } else {
         try writer.print("{: >9}", .{stat.size});
     }
